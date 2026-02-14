@@ -79,30 +79,28 @@ class _DirLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: () {
-          // Expand ~ to user home
-          String expandedPath = path.replaceAll('~', Platform.environment['HOME'] ?? '');
-          Process.run('xdg-open', [expandedPath]);
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  color: const Color(0xFFCDD6F4),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
+    return InkWell(
+      onTap: () {
+        // Expand ~ to user home
+        String expandedPath = path.replaceAll('~', Platform.environment['HOME'] ?? '');
+        Process.run('xdg-open', [expandedPath]);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                color: const Color(0xFFCDD6F4),
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
