@@ -2,6 +2,12 @@
 
 A modern, customizable menu for Hyprland (and other WMs) built with Flutter.
 
+![HyprMenu Screenshot](assets/screenshot.png)
+
+Works with any bar (Waybar, etc.).
+
+> **Note:** Currently, the window position is not fixed.
+
 ## Configuration
 
 HyprMenu reads configuration from `~/.config/hyprmenu/config.json`.
