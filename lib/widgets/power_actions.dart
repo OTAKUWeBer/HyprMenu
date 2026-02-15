@@ -12,22 +12,31 @@ class PowerActions extends StatelessWidget {
         _PowerButton(
           icon: Icons.power_settings_new,
           color: const Color(0xFFF38BA8), // Red
-          onTap: () => Process.run('systemctl', ['poweroff']),
+          onTap: () async {
+            await Process.start('systemctl', ['poweroff']);
+            exit(0);
+          },
         ),
         _PowerButton(
           icon: Icons.restart_alt,
           color: const Color(0xFFFAB387), // Orange
-          onTap: () => Process.run('systemctl', ['reboot']),
+          onTap: () async {
+            await Process.start('systemctl', ['reboot']);
+            exit(0);
+          },
         ),
         _PowerButton(
           icon: Icons.logout,
           color: const Color(0xFFA6E3A1), // Green
-          onTap: () => Process.run('hyprctl', ['dispatch', 'exit']),
+          onTap: () async {
+            await Process.start('hyprctl', ['dispatch', 'exit']);
+            exit(0);
+          },
         ),
         _PowerButton(
           icon: Icons.lock,
           color: const Color(0xFF89DCEB), // Sky
-          onTap: () => Process.run('hyprlock', []), // Or swaylock
+          onTap: () => Process.start('hyprlock', []), // Or swaylock
         ),
       ],
     );
