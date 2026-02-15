@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/responsive.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/power_actions.dart';
 import '../widgets/app_launchers.dart';
@@ -13,6 +14,8 @@ class MenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = Responsive.scale(context);
+    
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -21,82 +24,82 @@ class MenuScreen extends StatelessWidget {
         child: ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0), // Reduced padding for more space
+            padding: EdgeInsets.all(16.0 * s),
           child: Column(
             children: [
               // Top Section: Profile + Power
               SizedBox(
-                height: 260, // Increased to ensure power buttons don't touch
+                height: 260 * s,
                 child: Row(
                   children: [
                     Expanded(
                       flex: 2,
                       child: Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(16 * s),
                         decoration: BoxDecoration(
                           color: const Color(0xFF181825), // Mantle
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(16 * s),
                         ),
-                        child: const ProfileHeader(), // Need to adjust ProfileHeader to fit centered
+                        child: const ProfileHeader(),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16 * s),
                     Container(
-                      width: 80,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      width: 80 * s,
+                      padding: EdgeInsets.symmetric(vertical: 16 * s),
                       decoration: BoxDecoration(
                         color: const Color(0xFF181825),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16 * s),
                       ),
                       child: const PowerActions(),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8), // Reduced gap
+              SizedBox(height: 8 * s),
               
               // App Launchers
               const AppLauncherGrid(),
-              const SizedBox(height: 8), // Reduced gap
+              SizedBox(height: 8 * s),
               
               // Music Player
               const MusicPlayerCard(),
-              const SizedBox(height: 8), // Reduced gap
+              SizedBox(height: 8 * s),
 
               // Middle Section: Toggles + Volume
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 8 * s),
                 decoration: BoxDecoration(
                    color: const Color(0xFF181825),
-                   borderRadius: BorderRadius.circular(16),
+                   borderRadius: BorderRadius.circular(16 * s),
                 ),
-                child: Column(
+                child: const Column(
                   children: [
-                    const QuickToggles(),
+                    QuickToggles(),
                   ],
                 ),
               ),
               
-              const SizedBox(height: 8), // Reduced gap
+              SizedBox(height: 8 * s),
               
               // Directories
               Container(
-                 padding: const EdgeInsets.all(12), // Reduced padding
+                 padding: EdgeInsets.all(12 * s),
                  decoration: BoxDecoration(
                    color: const Color(0xFF181825),
-                   borderRadius: BorderRadius.circular(16),
+                   borderRadius: BorderRadius.circular(16 * s),
                  ),
                  child: const DirectoryLinks(),
               ),
               
-              const SizedBox(height: 8), // Reduced gap
+              SizedBox(height: 8 * s),
 
               // System Stats
                Container(
-                 padding: const EdgeInsets.all(12), // Reduced padding
+                 padding: EdgeInsets.all(12 * s),
                  decoration: BoxDecoration(
                    color: const Color(0xFF181825),
-                   borderRadius: BorderRadius.circular(16),
+                   borderRadius: BorderRadius.circular(16 * s),
                  ),
                  child: const SystemStatsCard(),
                ),

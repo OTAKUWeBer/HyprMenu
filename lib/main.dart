@@ -16,28 +16,34 @@ void main() async {
   await ConfigService.instance.init();
 
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-    // New larger size
-    setWindowMinSize(const Size(400, 910));
-    setWindowMaxSize(const Size(400, 910));
-    
-    // Attempt to position on the right side
+    // Attempt to size and position dynamically based on screen
     try {
       final screenList = await getScreenList();
       if (screenList.isNotEmpty) {
-        final screen = screenList.first; // Primary screen usually
+        final screen = screenList.first;
         final frame = screen.visibleFrame;
+        
+        // Scale window to screen: ~21% width, ~85% height
+        final width = (frame.width * 0.21).clamp(320.0, 500.0);
+        final height = (frame.height * 0.85).clamp(600.0, 1200.0);
+        
+        setWindowMinSize(Size(width, height));
+        setWindowMaxSize(Size(width, height));
+        
         // Position top-right, with some padding
-        const width = 400.0;
-        const height = 800.0;
-        final left = frame.width - width - 10; // 10px padding from right
-        final top = 10.0; // 10px padding from top
+        final left = frame.width - width - 10;
+        const top = 10.0;
         setWindowFrame(Rect.fromLTWH(left, top, width, height));
       } else {
-         debugPrint("No screens found, defaulting frame");
-         setWindowFrame(const Rect.fromLTWH(1500, 10, 400, 800));
+        debugPrint("No screens found, defaulting frame");
+        setWindowMinSize(const Size(320, 600));
+        setWindowMaxSize(const Size(400, 800));
+        setWindowFrame(const Rect.fromLTWH(10, 10, 400, 800));
       }
     } catch (e) {
       debugPrint("Failed to get screen info: $e");
+      setWindowMinSize(const Size(320, 600));
+      setWindowMaxSize(const Size(400, 800));
       setWindowFrame(const Rect.fromLTWH(10, 10, 400, 800));
     }
   }

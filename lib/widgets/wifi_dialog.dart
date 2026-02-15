@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/responsive.dart';
 
 class WifiDialog extends StatefulWidget {
   const WifiDialog({super.key});
@@ -21,11 +22,9 @@ class _WifiDialogState extends State<WifiDialog> {
 
   Future<void> _scanWifi() async {
     try {
-      // Run nmcli to list networks
-      // Format: SSID|SIGNAL
       final result = await Process.run('bash', ['-c', "nmcli -t -f SSID,SIGNAL dev wifi list"]);
       final lines = result.stdout.toString().split('\n');
-      final uniqueNetworks = <String>{}; // Use set to de-dupe
+      final uniqueNetworks = <String>{};
       
       for (var line in lines) {
         if (line.trim().isEmpty) continue;
@@ -33,7 +32,7 @@ class _WifiDialogState extends State<WifiDialog> {
         
         final ssid = parts[0];
         if (ssid.isNotEmpty && uniqueNetworks.length < 15) {
-          uniqueNetworks.add(ssid.replaceAll(r'\\:', ':')); // Basic unescape attempt
+          uniqueNetworks.add(ssid.replaceAll(r'\\:', ':')); 
         }
       }
       
@@ -80,26 +79,26 @@ class _WifiDialogState extends State<WifiDialog> {
 
     if (shouldConnect == true) {
       if (!mounted) return;
-      Navigator.pop(context); // Close Wifi list
-      // Show connecting snaccbar?
-      // Run connection command
+      Navigator.pop(context);
       Process.run('nmcli', ['dev', 'wifi', 'connect', ssid, 'password', passwordController.text]);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final s = Responsive.scale(context);
+    
     return Dialog(
        backgroundColor: const Color(0xFF1E1E2E),
-       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20 * s)),
        child: Container(
-         padding: const EdgeInsets.all(16),
-         height: 400,
-         width: 300,
+         padding: EdgeInsets.all(16 * s),
+         height: 400 * s,
+         width: 300 * s,
          child: Column(
            children: [
-             Text('Available Networks', style: GoogleFonts.inter(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-             const SizedBox(height: 16),
+             Text('Available Networks', style: GoogleFonts.inter(color: Colors.white, fontSize: 18 * s, fontWeight: FontWeight.bold)),
+             SizedBox(height: 16 * s),
              Expanded(
                child: isLoading 
                  ? const Center(child: CircularProgressIndicator()) 
@@ -108,8 +107,8 @@ class _WifiDialogState extends State<WifiDialog> {
                      itemBuilder: (ctx, i) {
                        final net = networks[i];
                        return ListTile(
-                         leading: const Icon(Icons.wifi, color: Colors.white70),
-                         title: Text(net, style: const TextStyle(color: Colors.white)),
+                         leading: Icon(Icons.wifi, color: Colors.white70, size: 24 * s),
+                         title: Text(net, style: TextStyle(color: Colors.white, fontSize: 14 * s)),
                          onTap: () => _connect(net),
                        );
                      },

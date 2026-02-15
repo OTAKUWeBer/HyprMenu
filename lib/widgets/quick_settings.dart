@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/system_state.dart';
+import '../utils/responsive.dart';
 import 'wifi_dialog.dart';
 
 class QuickSettingsGrid extends StatelessWidget {
@@ -10,12 +11,13 @@ class QuickSettingsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sys = context.watch<SystemState>();
+    final s = Responsive.scale(context);
     
     return Row(
       children: [
         Expanded(
-          child: AspectRatio( // Enforce square or specific ratio logic if needed, but Expanded handles width.
-            aspectRatio: 1.6, // Adjust for desired shape
+          child: AspectRatio(
+            aspectRatio: 1.6,
             child: _QuickTile(
               icon: Icons.wifi,
               label: 'Wi-Fi',
@@ -24,18 +26,20 @@ class QuickSettingsGrid extends StatelessWidget {
               onLongPress: () {
                  _showWifiList(context);
               },
+              scale: s,
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12 * s),
         Expanded(
           child: AspectRatio(
-            aspectRatio: 1.6, // Same ratio to ensure equal size
+            aspectRatio: 1.6,
             child: _QuickTile(
               icon: Icons.bluetooth,
               label: 'Bluetooth',
               isActive: sys.bluetoothEnabled,
               onTap: () => sys.toggleBluetooth(),
+              scale: s,
             ),
           ),
         ),
@@ -57,12 +61,14 @@ class _QuickTile extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final double scale;
 
   const _QuickTile({
     required this.icon,
     required this.label,
     required this.isActive,
     required this.onTap,
+    required this.scale,
     this.onLongPress,
   });
 
@@ -71,13 +77,13 @@ class _QuickTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16 * scale),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: EdgeInsets.symmetric(vertical: 20 * scale),
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFF89B4FA) : const Color(0xFF313244),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16 * scale),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -85,20 +91,20 @@ class _QuickTile extends StatelessWidget {
             Icon(
               icon,
               color: isActive ? const Color(0xFF1E1E2E) : const Color(0xFFCDD6F4),
-              size: 28,
+              size: 28 * scale,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8 * scale),
             Text(
               label,
               style: GoogleFonts.inter(
                 color: isActive ? const Color(0xFF1E1E2E) : const Color(0xFFCDD6F4),
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 14 * scale,
               ),
             ),
              if (onLongPress != null) ...[
-                const SizedBox(height: 4),
-                Icon(Icons.more_horiz, size: 12, color: isActive ? Colors.black26 : Colors.white24)
+                SizedBox(height: 4 * scale),
+                Icon(Icons.more_horiz, size: 12 * scale, color: isActive ? Colors.black26 : Colors.white24)
              ]
           ],
         ),

@@ -2,6 +2,7 @@ import 'dart:io';
 import '../services/config_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/responsive.dart';
 
 class DirectoryLinks extends StatelessWidget {
   const DirectoryLinks({super.key});
@@ -9,6 +10,7 @@ class DirectoryLinks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final directories = ConfigService.instance.config['directories'] as List<dynamic>? ?? [];
+    final s = Responsive.scale(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -16,16 +18,15 @@ class DirectoryLinks extends StatelessWidget {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 8, // Reduced spacing
-            crossAxisSpacing: 8, // Reduced spacing
-            childAspectRatio: 4, // Flatter buttons
+            mainAxisSpacing: 8 * s,
+            crossAxisSpacing: 8 * s,
+            childAspectRatio: 4,
           ),
           itemCount: directories.length,
           itemBuilder: (context, index) {
             final dir = directories[index];
-            // Cycle through a palette of Catppuccin colors
             final colors = [
               const Color(0xFFF5C2E7), // Pink
               const Color(0xFFA6E3A1), // Green
@@ -41,6 +42,7 @@ class DirectoryLinks extends StatelessWidget {
               label: dir['label'],
               path: dir['path'],
               color: color,
+              scale: s,
             );
           },
         ),
@@ -69,35 +71,36 @@ class _DirLink extends StatelessWidget {
   final String label;
   final String path;
   final Color color;
+  final double scale;
 
   const _DirLink({
     required this.icon,
     required this.label,
     required this.path,
     required this.color,
+    required this.scale,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        // Expand ~ to user home
         String expandedPath = path.replaceAll('~', Platform.environment['HOME'] ?? '');
         Process.run('xdg-open', [expandedPath]);
       },
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(8 * scale),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.symmetric(vertical: 8 * scale),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
+            Icon(icon, color: color, size: 20 * scale),
+            SizedBox(width: 8 * scale),
             Text(
               label,
               style: GoogleFonts.inter(
                 color: const Color(0xFFCDD6F4),
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 14 * scale,
               ),
             ),
           ],

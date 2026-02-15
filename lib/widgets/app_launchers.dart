@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/config_service.dart';
+import '../utils/responsive.dart';
 
 class AppLauncherGrid extends StatelessWidget {
   const AppLauncherGrid({super.key});
@@ -9,20 +10,22 @@ class AppLauncherGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final apps = ConfigService.instance.config['apps'] as List<dynamic>? ?? [];
+    final s = Responsive.scale(context);
 
     return GridView.count(
       crossAxisCount: 4,
       childAspectRatio: 1.5,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
+      mainAxisSpacing: 12 * s,
+      crossAxisSpacing: 12 * s,
       children: apps.map((app) {
         return _AppTile(
           icon: _getIcon(app['icon'], app['name']),
           color: const Color(0xFF89B4FA),
           cmd: app['command'],
           tooltip: app['name'],
+          scale: s,
         );
       }).toList(),
     );
@@ -56,12 +59,14 @@ class _AppTile extends StatelessWidget {
   final Color color;
   final String cmd;
   final String tooltip;
+  final double scale;
 
   const _AppTile({
     required this.icon,
     required this.color,
     required this.cmd,
     required this.tooltip,
+    required this.scale,
   });
 
   @override
@@ -72,17 +77,17 @@ class _AppTile extends StatelessWidget {
         onTap: () {
           Process.run('bash', ['-c', '$cmd &']);
         },
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10 * scale),
         child: Container(
-          padding: const EdgeInsets.all(6), // ⬅ tight padding
+          padding: EdgeInsets.all(6 * scale),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10 * scale),
           ),
           child: Icon(
             icon,
             color: const Color(0xFF1E1E2E),
-            size: 22,
+            size: 22 * scale,
           ),
         ),
       ),

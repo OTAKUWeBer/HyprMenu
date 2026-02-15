@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/media_state.dart';
+import '../utils/responsive.dart';
 
 class MusicPlayerCard extends StatelessWidget {
   const MusicPlayerCard({super.key});
@@ -10,6 +11,7 @@ class MusicPlayerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final media = context.watch<MediaState>();
+    final s = Responsive.scale(context);
 
     ImageProvider? imageProvider;
     if (media.artUrl.isNotEmpty) {
@@ -25,10 +27,10 @@ class MusicPlayerCard extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16 * s),
       decoration: BoxDecoration(
         color: const Color(0xFF313244),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20 * s),
         gradient: const LinearGradient(
            colors: [Color(0xFF313244), Color(0xFF45475A)],
            begin: Alignment.topLeft,
@@ -40,10 +42,10 @@ class MusicPlayerCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 60,
-                height: 60,
+                width: 60 * s,
+                height: 60 * s,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12 * s),
                   color: Colors.black26, 
                   image: imageProvider != null
                     ? DecorationImage(
@@ -54,10 +56,10 @@ class MusicPlayerCard extends StatelessWidget {
                     : null,
                 ),
                 child: imageProvider == null
-                  ? const Icon(Icons.music_note, color: Colors.white24, size: 30)
+                  ? Icon(Icons.music_note, color: Colors.white24, size: 30 * s)
                   : null,
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16 * s),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,17 +71,17 @@ class MusicPlayerCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 16 * s,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4 * s),
                     Text(
                       media.artist,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
                         color: const Color(0xFFA6ADC8),
-                        fontSize: 13,
+                        fontSize: 13 * s,
                       ),
                     ),
                   ],
@@ -87,11 +89,15 @@ class MusicPlayerCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16 * s),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(onPressed: media.previous, icon: const Icon(Icons.skip_previous, color: Colors.white)),
+              IconButton(
+                onPressed: media.previous,
+                iconSize: 24 * s,
+                icon: Icon(Icons.skip_previous, color: Colors.white, size: 24 * s),
+              ),
               Container(
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
@@ -99,10 +105,15 @@ class MusicPlayerCard extends StatelessWidget {
                 ),
                 child: IconButton(
                   onPressed: media.playPause,
-                  icon: Icon(media.isPlaying ? Icons.pause : Icons.play_arrow, color: const Color(0xFF1E1E2E)),
+                  iconSize: 24 * s,
+                  icon: Icon(media.isPlaying ? Icons.pause : Icons.play_arrow, color: const Color(0xFF1E1E2E), size: 24 * s),
                 ),
               ),
-              IconButton(onPressed: media.next, icon: const Icon(Icons.skip_next, color: Colors.white)),
+              IconButton(
+                onPressed: media.next,
+                iconSize: 24 * s,
+                icon: Icon(Icons.skip_next, color: Colors.white, size: 24 * s),
+              ),
             ],
           ),
         ],
