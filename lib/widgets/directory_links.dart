@@ -93,14 +93,14 @@ class _DirLink extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 8 * scale),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 20 * scale),
+            Icon(icon, color: color, size: 24 * scale),
             SizedBox(width: 8 * scale),
             Text(
               label,
               style: GoogleFonts.inter(
                 color: const Color(0xFFCDD6F4),
                 fontWeight: FontWeight.w600,
-                fontSize: 14 * scale,
+                fontSize: 15 * scale,
               ),
             ),
           ],
