@@ -32,6 +32,8 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
   List<String> _savedNetworks = [];
   bool _isLoadingAvailable = true;
   bool _isLoadingSaved = true;
+  String? _connectedSsid;
+  String? _connectingSSID;
 
   @override
   void initState() {
@@ -39,6 +41,7 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
     _tabController = TabController(length: 2, vsync: this);
     _scanWifi();
     _loadSavedNetworks();
+    _loadConnectedNetwork();
   }
 
   @override
@@ -106,12 +109,85 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
 
   // ── Actions ──
 
+  Future<void> _loadConnectedNetwork() async {
+    try {
+      final result = await Process.run(
+        'bash', ['-c', 'nmcli -t -f NAME,TYPE,DEVICE connection show --active'],
+      );
+      final lines = result.stdout.toString().split('\n');
+      String? connected;
+      for (var line in lines) {
+        if (line.trim().isEmpty) continue;
+        // Format: NAME:TYPE:DEVICE
+        final parts = line.split(':');
+        if (parts.length >= 3 && parts[parts.length - 2].contains('wireless')) {
+          connected = parts.sublist(0, parts.length - 2).join(':');
+          break;
+        }
+      }
+      if (mounted) setState(() => _connectedSsid = connected);
+    } catch (_) {}
+  }
+
   Future<void> _connectToNetwork(String ssid) async {
+    final isSaved = _savedNetworks.contains(ssid);
+    final network = _availableNetworks.where((n) => n.ssid == ssid).firstOrNull;
+    final isOpen = network != null && network.security.isEmpty;
+
+    if (isSaved) {
+      // Try auto-connect with saved credentials
+      if (mounted) setState(() => _connectingSSID = ssid);
+      try {
+        final result = await Process.run(
+          'nmcli', ['connection', 'up', ssid],
+        );
+        if (result.exitCode == 0) {
+          // Success
+          await _loadConnectedNetwork();
+          if (mounted) setState(() => _connectingSSID = null);
+          return;
+        }
+      } catch (_) {}
+      if (mounted) setState(() => _connectingSSID = null);
+      // Failed — password probably changed, ask for new one
+      await _connectWithPassword(ssid);
+    } else if (isOpen) {
+      // Open network — connect without password
+      if (mounted) setState(() => _connectingSSID = ssid);
+      try {
+        await Process.run('nmcli', ['dev', 'wifi', 'connect', ssid]);
+        await _loadConnectedNetwork();
+      } catch (_) {}
+      if (mounted) setState(() => _connectingSSID = null);
+    } else {
+      // New secured network — ask for password
+      await _connectWithPassword(ssid);
+    }
+  }
+
+  Future<void> _connectWithPassword(String ssid) async {
     final password = await _showPasswordDialog(ssid);
-    if (password == null) return;
-    if (!mounted) return;
-    Navigator.pop(context);
-    Process.run('nmcli', ['dev', 'wifi', 'connect', ssid, 'password', password]);
+    if (password == null || !mounted) return;
+    setState(() => _connectingSSID = ssid);
+    try {
+      final result = await Process.run(
+        'nmcli', ['dev', 'wifi', 'connect', ssid, 'password', password],
+      );
+      await _loadConnectedNetwork();
+      await _loadSavedNetworks();
+      if (result.exitCode != 0 && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Connection failed. Check the password.',
+                style: GoogleFonts.inter(color: _text)),
+            backgroundColor: _surface1,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _connectingSSID = null);
   }
 
   Future<String?> _getStoredPassword(String connectionName) async {
@@ -610,8 +686,10 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
       itemBuilder: (ctx, i) {
         final net = _availableNetworks[i];
         final isSaved = _savedNetworks.contains(net.ssid);
+        final isConnected = _connectedSsid != null && _connectedSsid == net.ssid;
+        final isConnecting = _connectingSSID == net.ssid;
         return InkWell(
-          onTap: () => _connectToNetwork(net.ssid),
+          onTap: isConnected || isConnecting ? null : () => _connectToNetwork(net.ssid),
           borderRadius: BorderRadius.circular(12 * s),
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 10 * s, horizontal: 4 * s),
@@ -622,12 +700,12 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
                   width: 36 * s,
                   height: 36 * s,
                   decoration: BoxDecoration(
-                    color: _surface0,
+                    color: isConnected ? _green.withValues(alpha: 0.15) : _surface0,
                     borderRadius: BorderRadius.circular(10 * s),
                   ),
                   child: Icon(
                     _signalIcon(net.signal),
-                    color: net.signal >= 50 ? _green : _subtext0,
+                    color: isConnected ? _green : (net.signal >= 50 ? _green : _subtext0),
                     size: 18 * s,
                   ),
                 ),
@@ -648,7 +726,16 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
                       SizedBox(height: 2 * s),
                       Row(
                         children: [
-                          if (net.security.isNotEmpty) ...[
+                          if (isConnected) ...[
+                            Icon(Icons.check_circle_rounded, color: _green, size: 11 * s),
+                            SizedBox(width: 4 * s),
+                            Text(
+                              'Connected',
+                              style: GoogleFonts.inter(
+                                color: _green, fontSize: 11 * s, fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ] else if (net.security.isNotEmpty) ...[
                             Icon(Icons.lock_outline_rounded, color: _overlay0, size: 11 * s),
                             SizedBox(width: 4 * s),
                             Text(
@@ -657,7 +744,7 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
                             ),
                           ] else
                             Text('Open', style: GoogleFonts.inter(color: _overlay0, fontSize: 11 * s)),
-                          if (isSaved) ...[
+                          if (isSaved && !isConnected) ...[
                             SizedBox(width: 8 * s),
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 6 * s, vertical: 1 * s),
@@ -678,8 +765,27 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
                     ],
                   ),
                 ),
-                // Connect arrow
-                Icon(Icons.chevron_right_rounded, color: _surface2, size: 22 * s),
+                // Connecting spinner or connect arrow
+                if (isConnecting)
+                  SizedBox(
+                    width: 20 * s,
+                    height: 20 * s,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2 * s,
+                      color: _blue,
+                    ),
+                  )
+                else if (isConnected)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 4 * s),
+                    decoration: BoxDecoration(
+                      color: _green.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8 * s),
+                    ),
+                    child: Icon(Icons.check_rounded, color: _green, size: 16 * s),
+                  )
+                else
+                  Icon(Icons.chevron_right_rounded, color: _surface2, size: 22 * s),
               ],
             ),
           ),
@@ -713,6 +819,7 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
       separatorBuilder: (_, __) => Divider(color: _surface1.withValues(alpha: 0.4), height: 1),
       itemBuilder: (ctx, i) {
         final name = _savedNetworks[i];
+        final isConnected = _connectedSsid != null && _connectedSsid == name;
         return Padding(
           padding: EdgeInsets.symmetric(vertical: 8 * s, horizontal: 4 * s),
           child: Row(
@@ -721,20 +828,44 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
                 width: 36 * s,
                 height: 36 * s,
                 decoration: BoxDecoration(
-                  color: _surface0,
+                  color: isConnected ? _green.withValues(alpha: 0.15) : _surface0,
                   borderRadius: BorderRadius.circular(10 * s),
                 ),
-                child: Icon(Icons.wifi_rounded, color: _blue, size: 18 * s),
+                child: Icon(
+                  Icons.wifi_rounded,
+                  color: isConnected ? _green : _blue,
+                  size: 18 * s,
+                ),
               ),
               SizedBox(width: 12 * s),
               Expanded(
-                child: Text(
-                  name,
-                  style: GoogleFonts.inter(
-                    color: _text, fontSize: 14 * s, fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: GoogleFonts.inter(
+                        color: _text, fontSize: 14 * s, fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (isConnected) ...[
+                      SizedBox(height: 2 * s),
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle_rounded, color: _green, size: 11 * s),
+                          SizedBox(width: 4 * s),
+                          Text(
+                            'Connected',
+                            style: GoogleFonts.inter(
+                              color: _green, fontSize: 11 * s, fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
               // Share button
