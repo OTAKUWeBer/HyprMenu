@@ -765,6 +765,21 @@ class _WifiDialogState extends State<WifiDialog> with SingleTickerProviderStateM
                     ],
                   ),
                 ),
+                // QR share button for saved networks
+                if (isSaved) ...[
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _showShareDialog(net.ssid),
+                      borderRadius: BorderRadius.circular(8 * s),
+                      child: Padding(
+                        padding: EdgeInsets.all(6 * s),
+                        child: Icon(Icons.qr_code_2_rounded, color: _blue, size: 18 * s),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 4 * s),
+                ],
                 // Connecting spinner or connect arrow
                 if (isConnecting)
                   SizedBox(
